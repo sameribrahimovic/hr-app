@@ -121,7 +121,7 @@ const OnboardingForm = ({
       console.log(response);
 
       if (response?.success) {
-        console.log("Employee created successfully");
+        // console.log("Employee created successfully");
         canRedirect = true;
       }
     } catch (error: unknown) {
@@ -134,7 +134,7 @@ const OnboardingForm = ({
     }
 
     if (canRedirect) {
-      console.log("Redirecting to employee");
+      // console.log("Redirecting to employee");
       toast.success("Onboarding completed successfully.");
       setTimeout(() => {
         window.location.reload();
