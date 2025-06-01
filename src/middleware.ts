@@ -9,9 +9,9 @@ const isEmployeeRoute = createRouteMatcher(["/employee", "/employee/(.*)"]);
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const { userId, sessionClaims, redirectToSignIn } = await auth();
 
-  console.log(sessionClaims?.metadata);
+  // console.log(sessionClaims?.metadata);
 
-  console.log(req.nextUrl.searchParams.get("onboardingCompleted"));
+  // console.log(req.nextUrl.searchParams.get("onboardingCompleted"));
 
   if (
     userId &&
@@ -55,13 +55,13 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     sessionClaims?.metadata?.onboardingCompleted &&
     isOnboardingRoute(req)
   ) {
-    console.log("Onboarding completed, redirecting to appropriate page");
+    // console.log("Onboarding completed, redirecting to appropriate page");
     if (sessionClaims?.metadata?.role === "ADMIN") {
-      console.log("Redirecting admin to admin page");
+      // console.log("Redirecting admin to admin page");
       const adminUrl = new URL("/admin", req.url);
       return NextResponse.redirect(adminUrl);
     } else {
-      console.log("Redirecting employee to employee page");
+      // console.log("Redirecting employee to employee page");
       const employeeUrl = new URL("/employee", req.url);
       return NextResponse.redirect(employeeUrl);
     }
@@ -69,7 +69,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
   if (userId && isOnboardingRoute(req)) {
     if (req.nextUrl.searchParams.get("onboardingCompleted")) {
-      console.log("Onboarding completed, redirecting to appropriate page");
+      // console.log("Onboarding completed, redirecting to appropriate page");
       if (sessionClaims?.metadata?.role === "ADMIN") {
         const adminUrl = new URL("/admin", req.url);
         return NextResponse.redirect(adminUrl);
