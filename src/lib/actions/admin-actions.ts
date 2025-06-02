@@ -281,3 +281,47 @@ export async function deleteCompanyHoliday(id: string) {
     throw new Error("Failed to delete company holiday");
   }
 }
+
+//employee
+export async function updateEmployeeAllowance({
+  employeeId,
+  availableDays,
+}: {
+  employeeId: string;
+  availableDays: number;
+}) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return { error: "Unauthorised" };
+    }
+
+    const adminUser = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+    });
+
+    if (!adminUser || adminUser.role !== "ADMIN") {
+      throw new Error("Unauthorized");
+    }
+    await prisma.user.update({
+      where: {
+        id: employeeId,
+      },
+      data: {
+        availableDays,
+      },
+    });
+
+    revalidatePath("/admin/employees/allowance");
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to update employee allowance");
+  }
+}
