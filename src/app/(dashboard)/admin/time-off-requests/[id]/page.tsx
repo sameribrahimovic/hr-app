@@ -19,7 +19,7 @@ const TimeOffRequestPage = async ({
     redirect("/");
   }
 
-  const { id } = await params;
+  const { id } = params;
 
   const request = await prisma.timeOffRequest.findUnique({
     where: {
