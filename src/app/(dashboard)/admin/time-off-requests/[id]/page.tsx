@@ -9,9 +9,7 @@ import ApproveRejectButtons from "@/components/ApproveRejectButtons";
 const TimeOffRequestPage = async ({
   params,
 }: {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }) => {
   const { userId } = await auth();
 
@@ -19,7 +17,7 @@ const TimeOffRequestPage = async ({
     redirect("/");
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   const request = await prisma.timeOffRequest.findUnique({
     where: {

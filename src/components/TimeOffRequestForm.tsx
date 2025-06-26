@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import type { Resolver } from "react-hook-form";
 import { z } from "zod";
 import {
   format,
@@ -200,7 +201,7 @@ const TimeOffRequestForm = ({
   const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(requestSchema),
+    resolver: zodResolver(requestSchema) as Resolver<FormValues>,
     defaultValues: {
       type: "VACATION",
       excludeWeekends: true,
@@ -213,7 +214,7 @@ const TimeOffRequestForm = ({
   const endDate = form.watch("endDate");
   const excludeWeekends = form.watch("excludeWeekends");
   const excludeHolidays = form.watch("excludeHolidays");
-  const customExcludedDates = form.watch("customExcludedDates");
+  const customExcludedDates = form.watch("customExcludedDates") ?? [];
 
   const { totalDays, workingDays, excludedDays } =
     startDate && endDate
@@ -222,7 +223,7 @@ const TimeOffRequestForm = ({
           endDate,
           excludeWeekends ?? false,
           excludeHolidays ?? false,
-          customExcludedDates,
+          customExcludedDates, // always Date[]
           companyHolidays
         )
       : {
