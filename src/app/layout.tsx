@@ -4,6 +4,7 @@ import "./globals.css";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,12 +29,14 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <MaxWidthWrapper>{children}</MaxWidthWrapper>
-          <Toaster />
+          <ThemeProvider>
+            <MaxWidthWrapper>{children}</MaxWidthWrapper>
+            <Toaster />
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

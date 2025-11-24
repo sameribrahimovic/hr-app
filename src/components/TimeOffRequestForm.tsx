@@ -297,20 +297,20 @@ const TimeOffRequestForm = ({
   };
 
   return (
-    <div className="space-y-8 mt-12">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold">New time off request</h1>
-        <p className="text-gray-500">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 mt-6 sm:mt-8 lg:mt-12 px-4 sm:px-6 lg:px-0">
+      <div className="flex flex-col space-y-1 sm:space-y-2">
+        <h1 className="text-2xl sm:text-3xl font-bold">New time off request</h1>
+        <p className="text-sm sm:text-base text-gray-500">
           Submit a new time off request to your manager
         </p>
       </div>
       {existingRequests?.length > 0 && (
         <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4">
-              Your upcoming time off.
+          <CardContent className="p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold mb-4">
+              Your upcoming time off
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {existingRequests
                 .filter((request) => new Date(request.startDate) >= new Date())
                 .sort(
@@ -321,36 +321,37 @@ const TimeOffRequestForm = ({
                 .map((request) => {
                   return (
                     <div
-                      className="p-3 border rounded-md flex justify-between items-center"
+                      className="p-3 sm:p-4 border rounded-md flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3"
                       key={request.id}
                     >
-                      <Badge className={getRequestTypeColor(request.type)}>
-                        {request.type.charAt(0) +
-                          request.type.slice(1).toLowerCase()}
-                      </Badge>
-                      <div className="mt-1">
-                        {format(new Date(request.startDate), "MMM d, yyyy")} -{" "}
-                        {format(new Date(request.endDate), "MMM d, yyyy")}
-                      </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                        <Badge className={`${getRequestTypeColor(request.type)} shrink-0 w-fit`}>
+                          {request.type.charAt(0) +
+                            request.type.slice(1).toLowerCase()}
+                        </Badge>
+                        <div className="text-sm sm:text-base">
+                          {format(new Date(request.startDate), "MMM d, yyyy")} -{" "}
+                          {format(new Date(request.endDate), "MMM d, yyyy")}
+                        </div>
                         {request.reason && (
-                          <div className="text-sm text-gray-500 mt-1">
+                          <div className="text-xs sm:text-sm text-gray-500 truncate">
                             {request.reason}
                           </div>
                         )}
-                        <Badge
-                          variant={
-                            request.status === "PENDING"
-                              ? "secondary"
-                              : request.status === "APPROVED"
-                              ? "default"
-                              : "destructive"
-                          }
-                        >
-                          {request.status.charAt(0) +
-                            request.status.slice(1).toLowerCase()}
-                        </Badge>
                       </div>
+                      <Badge
+                        variant={
+                          request.status === "PENDING"
+                            ? "secondary"
+                            : request.status === "APPROVED"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className="shrink-0 w-fit"
+                      >
+                        {request.status.charAt(0) +
+                          request.status.slice(1).toLowerCase()}
+                      </Badge>
                     </div>
                   );
                 })}
@@ -359,10 +360,10 @@ const TimeOffRequestForm = ({
         </Card>
       )}
       <Card>
-        <CardContent className="py-6">
+        <CardContent className="py-4 sm:py-6 px-4 sm:px-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <FormField
                   control={form.control}
                   name="startDate"
@@ -441,18 +442,18 @@ const TimeOffRequestForm = ({
                   </div>
                 )}
 
-              <div className="bg-gray-50 p-4 rounded-md space-y-4">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-md space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium">Day exclusion options</h3>
-                  <div className="relative">
+                  <div className="relative group">
                     <InfoIcon className="h-4 w-4 text-gray-500 cursor-help" />
-                    <div className="absolute hidden group-hover:block w-64 p-2 bg-black text-white text-xs rounded shadow-lg -top-2 -right-2">
+                    <div className="absolute hidden group-hover:block w-48 sm:w-64 p-2 bg-black text-white text-xs rounded shadow-lg -top-2 right-0 z-10">
                       Excluded days will show in your time off date range but
                       will not be deducted from your time off allowance.
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   <FormField
                     control={form.control}
                     name="excludeWeekends"
@@ -502,9 +503,9 @@ const TimeOffRequestForm = ({
                   control={form.control}
                   name="customExcludedDates"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="col-span-1 md:col-span-2">
                       <FormLabel>Custom excluded dates (optional)</FormLabel>
-                      <FormDescription>
+                      <FormDescription className="text-xs sm:text-sm">
                         Add specific dates that should be excluded from your
                         time off allowance. (e.g dentist appointments or sick
                         leave)
@@ -581,51 +582,53 @@ const TimeOffRequestForm = ({
                 endDate &&
                 !form.formState.errors.startDate &&
                 !form.formState.errors.endDate && (
-                  <div className="bg-blue-50 p-4 rounded-md space-y-2">
+                  <div className="bg-blue-50 p-3 sm:p-4 rounded-md space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">Duration Summary</span>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div className="font-medium">Total days:</div>
-                        <div>
+                      <span className="text-sm sm:text-base font-medium">Duration Summary</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <div className="font-medium mb-1">Total days:</div>
+                        <div className="text-gray-700">
                           {totalDays} calendar day{totalDays !== 1 ? "s" : ""}
                         </div>
-                        <div>
-                          <div className="font-medium text-blue-700">
-                            Working days (counted):
-                          </div>
-                          <div className="text-blue-700 font-bold">
-                            {workingDays} day{workingDays !== 1 ? "s" : ""}
-                          </div>
-                        </div>
-                        {excludedDays?.length > 0 && (
-                          <div className="col-span-2">
-                            <div className="font-medium">Excluded days:</div>
-                            <div className="text-gray-600">
-                              {excludedDays.length} day
-                              {excludedDays.length !== 1 ? "s" : ""}
-                              {excludedDays?.length > 0 && (
-                                <div className="mt-1 text-xs">
-                                  {excludedDays?.map((day, i) => (
-                                    <span
-                                      key={i}
-                                      className="inline-block mr-2 mb-1 px-2 py-1 bg-gray-100 rounded"
-                                    >
-                                      {format(day, "EEE, MMM d")}
-                                      {isWeekend(day)
-                                        ? " (weekend)"
-                                        : bankHolidays?.some((h) =>
-                                            isSameDay(h, day)
-                                          )
-                                        ? " (holiday )"
-                                        : ""}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
                       </div>
+                      <div>
+                        <div className="font-medium text-blue-700 mb-1">
+                          Working days (counted):
+                        </div>
+                        <div className="text-blue-700 font-bold text-base">
+                          {workingDays} day{workingDays !== 1 ? "s" : ""}
+                        </div>
+                      </div>
+                      {excludedDays?.length > 0 && (
+                        <div className="col-span-1 sm:col-span-2 pt-2 border-t">
+                          <div className="font-medium mb-2">Excluded days:</div>
+                          <div className="text-gray-600 mb-2">
+                            {excludedDays.length} day
+                            {excludedDays.length !== 1 ? "s" : ""}
+                          </div>
+                          {excludedDays?.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {excludedDays?.map((day, i) => (
+                                <span
+                                  key={i}
+                                  className="inline-block px-2 py-1 bg-gray-100 rounded text-xs"
+                                >
+                                  {format(day, "EEE, MMM d")}
+                                  {isWeekend(day)
+                                    ? " (weekend)"
+                                    : bankHolidays?.some((h) =>
+                                        isSameDay(h, day)
+                                      )
+                                    ? " (holiday)"
+                                    : ""}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -674,22 +677,24 @@ const TimeOffRequestForm = ({
               />
               {error && (
                 <Alert variant={"destructive"}>
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
-              <div className="flex justify-end space-x-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-2 pt-2">
                 <Button
                   type="button"
                   variant={"outline"}
                   onClick={() => router.back()}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting || !!dateOverlapError}
+                  className="w-full sm:w-auto"
                 >
-                  {isSubmitting ? "Submitting" : "Submit request"}
+                  {isSubmitting ? "Submitting..." : "Submit request"}
                 </Button>
               </div>
             </form>
