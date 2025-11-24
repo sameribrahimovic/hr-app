@@ -23,13 +23,14 @@ import { Suspense } from "react";
 const ITEMS_PER_PAGE = 10;
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     search?: string;
     page?: string;
-  };
+  }>;
 }
 
 const TimeOffRequestPage = async ({ searchParams }: PageProps) => {
+  const resolvedSearchParams = await searchParams;
   const { userId, sessionClaims } = await auth();
 
   if (!userId) {
@@ -38,8 +39,8 @@ const TimeOffRequestPage = async ({ searchParams }: PageProps) => {
 
   const { companyId } = sessionClaims.metadata;
 
-  const search = searchParams.search || "";
-  const currentPage = Number(searchParams.page) || 1;
+  const search = resolvedSearchParams?.search || "";
+  const currentPage = Number(resolvedSearchParams?.page) || 1;
   const skip = (currentPage - 1) * ITEMS_PER_PAGE;
 
   // Build where clause for search

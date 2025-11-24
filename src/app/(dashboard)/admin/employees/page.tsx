@@ -20,13 +20,14 @@ import { Badge } from "@/components/ui/badge";
 const ITEMS_PER_PAGE = 10;
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     search?: string;
     page?: string;
-  };
+  }>;
 }
 
 const Page = async ({ searchParams }: PageProps) => {
+  const resolvedSearchParams = await searchParams;
   const { userId } = await auth();
   if (!userId) {
     redirect("/sign-in");
@@ -45,8 +46,8 @@ const Page = async ({ searchParams }: PageProps) => {
     redirect("/onboarding");
   }
 
-  const search = searchParams.search || "";
-  const currentPage = Number(searchParams.page) || 1;
+  const search = resolvedSearchParams?.search || "";
+  const currentPage = Number(resolvedSearchParams?.page) || 1;
   const skip = (currentPage - 1) * ITEMS_PER_PAGE;
 
   // Build where clause for search
