@@ -139,55 +139,55 @@ const MyRequestsPage = async () => {
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
                 <div className="inline-block min-w-full align-middle">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Dates</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Manager</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead>Notes</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {requests?.map((request) => (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Dates</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Manager</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Notes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {requests?.map((request) => (
                         <TableRow key={request.id} className="hover:bg-muted/50">
                           <TableCell className="font-medium">
                             {formatDate(request.startDate)} - {formatDate(request.endDate)}
-                          </TableCell>
+                      </TableCell>
                           <TableCell className="capitalize">{request.type}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                request.status === "PENDING"
-                                  ? "secondary"
-                                  : request.status === "APPROVED"
-                                  ? "default"
-                                  : "destructive"
-                              }
+                      <TableCell>
+                        <Badge
+                          variant={
+                            request.status === "PENDING"
+                              ? "secondary"
+                              : request.status === "APPROVED"
+                              ? "default"
+                              : "destructive"
+                          }
                               className="text-xs"
                             >
                               {request.status === "PENDING" && <Clock className="w-3 h-3 mr-1" />}
                               {request.status === "APPROVED" && <CheckCircle2 className="w-3 h-3 mr-1" />}
                               {request.status === "REJECTED" && <XCircle className="w-3 h-3 mr-1" />}
                               {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {request?.manager
-                              ? `${request?.manager?.firstName} ${request?.manager?.lastName}`
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>{formatDate(request.createdAt)}</TableCell>
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {request?.manager
+                          ? `${request?.manager?.firstName} ${request?.manager?.lastName}`
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell>{formatDate(request.createdAt)}</TableCell>
                           <TableCell className="max-w-xs truncate">
                             {request?.notes || <span className="text-muted-foreground">No notes</span>}
                           </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
               </div>
             </>
           )}

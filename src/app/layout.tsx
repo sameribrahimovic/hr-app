@@ -17,9 +17,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HR App",
+  title: "TimeOffer - HR Time Off Management",
   description:
     "A web app for managing employee records, vacation requests, and more.",
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
