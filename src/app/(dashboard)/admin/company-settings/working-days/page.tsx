@@ -8,7 +8,21 @@ import { parseWorkingDays } from "@/lib/time-off";
 export default async function WorkingDaysPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  const user = await prisma.user.findUnique({ where: { clerkId: userId }, include: { company: true } });
+  const user = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    include: { company: true },
+  });
   if (!user || user.role !== "ADMIN") redirect("/");
-  return <div className="page-stack"><PageHeader title="Radna nedelja" description="Podesite raspored koji važi za obračun odsustva u vašoj firmi." /><SettingsNav active="/admin/company-settings/working-days" /><CompanyWorkingDaysForm initialWorkingDays={parseWorkingDays(user.company.workingDays)} /></div>;
+  return (
+    <div className="page-stack">
+      <PageHeader
+        title="Radna nedelja"
+        description="Podesite raspored koji važi za obračun odsustva u vašoj firmi."
+      />
+      <SettingsNav active="/admin/company-settings/working-days" />
+      <CompanyWorkingDaysForm
+        initialWorkingDays={parseWorkingDays(user.company.workingDays)}
+      />
+    </div>
+  );
 }

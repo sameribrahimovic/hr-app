@@ -12,12 +12,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: { default: "TimeOffer — Odmori i odsustva", template: "%s | TimeOffer" },
+  title: {
+    default: "TimeOffer — Odmori i odsustva",
+    template: "%s | TimeOffer",
+  },
   description:
     "Zatražite odsustvo, pratite odobrenje i upravljajte slobodnim danima svog tima na jednom mestu.",
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
 };
 
@@ -27,11 +30,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/onboarding">
+    <ClerkProvider
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/onboarding"
+    >
       <html lang="sr-Latn" suppressHydrationWarning>
-        <body
-          className={inter.variable + " font-sans antialiased"}
-        >
+        <body className={inter.variable + " font-sans antialiased"}>
           <ThemeProvider>
             {children}
             <Toaster richColors position="top-center" closeButton />

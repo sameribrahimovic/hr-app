@@ -32,7 +32,7 @@ npm run build
 - Leave dates are calendar dates stored at UTC midnight. The current business date uses Europe/Belgrade.
 - Every approved leave type deducts days from the existing shared balance. Pending requests do not reserve days; sufficient balance is checked when approving.
 - Company policy changes apply to new requests. Existing requests retain their recorded day count.
-- Requests must contain at least one working day, start today or later, and cover at most 366 calendar days.
+- Requests must contain at least one working day, end today or later, and cover at most 366 calendar days.
 - Approval and balance deduction are atomic; processing the same request twice is prevented.
 - No schema migration is required for this redesign.
 
