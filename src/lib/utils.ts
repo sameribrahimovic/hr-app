@@ -1,27 +1,14 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+export function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
+export function formatDate(date: Date | string) {
+  return new Date(date).toLocaleDateString("sr-Latn-RS", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
-
-//helper function to format date
-export function formatDate(date: Date) {
-  return date.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 export function formatTime(date: Date) {
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "numeric",
-  });
+  return date.toLocaleTimeString("sr-Latn-RS", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Belgrade" });
 }
-
 export function calculateDays(startDate: Date, endDate: Date) {
-  const timeDiff = endDate.getTime() - startDate.getTime();
-  return Math.ceil(timeDiff / (1000 * 3600 * 24));
+  const start = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+  const end = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate());
+  return Math.max(0, Math.round((end - start) / 86400000) + 1);
 }

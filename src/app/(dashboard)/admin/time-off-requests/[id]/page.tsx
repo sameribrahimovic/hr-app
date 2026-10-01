@@ -1,180 +1,24 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
-import { formatDate, calculateDays } from "@/lib/utils";
-import { prisma } from "@/lib/prisma";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+import prisma from "@/lib/prisma";
+import { PageHeader } from "@/components/PageHeader";
+import { RequestStatus } from "@/components/RequestStatus";
 import ApproveRejectButtons from "@/components/ApproveRejectButtons";
-
-const TimeOffRequestPage = async ({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) => {
+import { formatDate, calculateDays } from "@/lib/utils";
+import { leaveTypes, daysLabel, roleLabels } from "@/lib/labels";
+export default async function RequestPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/");
-  }
-
+  if (!userId) redirect("/sign-in");
+  const admin = await prisma.user.findUnique({ where: { clerkId: userId } });
+  if (!admin || admin.role !== "ADMIN") redirect("/");
   const { id } = await params;
-
-  const request = await prisma.timeOffRequest.findUnique({
-    where: {
-      id,
-    },
-    include: {
-      employee: true,
-    },
-  });
-
-  if (!request) {
-    return notFound();
-  }
-
-  const employee = await prisma.user.findUnique({
-    where: {
-      id: request?.employeeId,
-    },
-    include: {
-      company: true,
-    },
-  });
-
-  const manager = await prisma.user.findUnique({
-    where: {
-      clerkId: userId,
-    },
-    include: {
-      company: true,
-    },
-  });
-
-  if (manager?.companyId !== employee?.companyId) {
-    redirect("/admin/time-off-requests");
-  }
-
-  const daysCount = calculateDays(request.startDate, request.endDate);
-
-  return (
-    <div className="space-y-8 mt-12">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col space-y-2">
-          <Link href="/admin/time-off-requests">Back to Time Off Requests</Link>
-          <h1 className="text-3xl font-bold">Time off request details</h1>
-        </div>
-        {request.status === "PENDING" && <ApproveRejectButtons id={id} />}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div className="p-6 flex flex-col space-y-1.5">
-            <h3 className="text-xl font-semibold leading-none tracking-tight">
-              Request Information
-            </h3>
-          </div>
-          <div className="px-6 pb-4">
-            <dl className="grid grid-cols-2 gap-4">
-              <dt className="text-sm font-medium text-gray-500">Status</dt>
-              <dd>
-                <Badge
-                  variant={
-                    request.status === "PENDING"
-                      ? "secondary"
-                      : request.status === "APPROVED"
-                      ? "default"
-                      : "destructive"
-                  }
-                >
-                  {request.status.charAt(0) + request.status.charAt(1)}
-                </Badge>
-              </dd>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">Type</dt>
-                <dd>{request.type}</dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">
-                  Start Date
-                </dt>
-                <dd>{formatDate(request.startDate)}</dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">End Date</dt>
-                <dd>{formatDate(request.endDate)}</dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">Duration</dt>
-                <dd>
-                  {daysCount} day{daysCount !== 1 ? "s" : ""}
-                </dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">
-                  Working days
-                </dt>
-                <dd>
-                  {request.workingDaysCount} day
-                  {request.workingDaysCount !== 1 ? "s" : ""}
-                </dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">Created</dt>
-                <dd>{formatDate(request.createdAt)}</dd>
-              </div>
-              {request.reason && (
-                <div className="grid col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">Reason</dt>
-                  <dd>{request.reason}</dd>
-                </div>
-              )}
-              {request.notes && (
-                <div className="grid col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">Notes</dt>
-                  <dd>{request.notes}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div className="p-6 flex flex-col space-y-1.5">
-            <h3 className="text-xl font-semibold leading-none tracking-tight">
-              Employee Information
-            </h3>
-          </div>
-          <div className="px-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">Name</dt>
-                <dd>
-                  {request.employee.firstName} {request.employee.lastName}
-                </dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd>{request.employee.email}</dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">Role</dt>
-                <dd>{request.employee.role}</dd>
-              </div>
-              <div className="space-y-1">
-                <dt className="text-sm font-medium text-gray-500">
-                  Department
-                </dt>
-                <dd>
-                  {request.employee.department
-                    ? request.employee.department
-                    : "N/A"}
-                </dd>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  const request = await prisma.timeOffRequest.findFirst({ where: { id, employee: { companyId: admin.companyId } }, include: { employee: true, manager: true } });
+  if (!request) notFound();
+  return <div className="page-stack">
+    <PageHeader title={leaveTypes[request.type]} description={"Zahtev zaposlenog: " + request.employee.firstName + " " + request.employee.lastName} back={{ href: "/admin/time-off-requests", label: "Svi zahtevi" }} />
+    <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <section className="surface p-5 sm:p-7"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title">Detalji odsustva</h2><RequestStatus status={request.status} /></div><div className="my-6 rounded-xl bg-secondary p-5"><p className="text-lg font-semibold">{formatDate(request.startDate)} – {formatDate(request.endDate)}</p><p className="mt-2 text-sm text-secondary-foreground">{request.workingDaysCount} {daysLabel(request.workingDaysCount)} odsustva · {calculateDays(request.startDate, request.endDate)} kalendarskih dana</p></div><dl className="space-y-5 text-sm"><div><dt className="text-muted-foreground">Poslato</dt><dd className="mt-1">{formatDate(request.createdAt)}</dd></div><div><dt className="text-muted-foreground">Napomena zaposlenog</dt><dd className="mt-1 whitespace-pre-wrap break-words leading-relaxed">{request.reason || "Zaposleni nije dodao napomenu."}</dd></div>{request.status !== "PENDING" && <div className="border-t pt-5"><dt className="font-medium">Odluka administratora</dt><dd className="mt-2 whitespace-pre-wrap break-words leading-relaxed">{request.notes || "Nema dodatne napomene."}</dd>{request.manager && <dd className="mt-3 text-xs text-muted-foreground">{request.manager.firstName} {request.manager.lastName} · {formatDate(request.updatedAt)}</dd>}</div>}</dl></section>
+      <aside className="space-y-5"><section className="surface p-5 sm:p-6"><h2 className="section-title">Zaposleni</h2><dl className="mt-5 space-y-4 text-sm"><div><dt className="text-muted-foreground">Ime i prezime</dt><dd className="mt-1 break-words font-medium">{request.employee.firstName} {request.employee.lastName}</dd></div><div><dt className="text-muted-foreground">Email</dt><dd className="mt-1 break-all">{request.employee.email}</dd></div><div><dt className="text-muted-foreground">Odeljenje</dt><dd className="mt-1">{request.employee.department || "Nije navedeno"}</dd></div><div><dt className="text-muted-foreground">Uloga</dt><dd className="mt-1">{roleLabels[request.employee.role]}</dd></div><div className="border-t pt-4"><dt className="text-muted-foreground">Trenutno raspoloživo</dt><dd className="mt-1 text-2xl font-semibold">{request.employee.availableDays} <span className="text-sm font-normal">dana</span></dd></div></dl></section>{request.status === "PENDING" && <section className="surface p-5"><h2 className="section-title">Vaša odluka</h2><p className="my-3 text-sm leading-relaxed text-muted-foreground">Odobrenjem se {request.workingDaysCount} dana oduzima od raspoloživog stanja zaposlenog.</p><ApproveRejectButtons id={id} /></section>}</aside>
     </div>
-  );
-};
-
-export default TimeOffRequestPage;
+  </div>;
+}

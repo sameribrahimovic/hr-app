@@ -1,25 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "TimeOffer - HR Time Off Management",
+  title: { default: "TimeOffer — Odmori i odsustva", template: "%s | TimeOffer" },
   description:
-    "A web app for managing employee records, vacation requests, and more.",
+    "Zatražite odsustvo, pratite odobrenje i upravljajte slobodnim danima svog tima na jednom mestu.",
   icons: {
     icon: '/icon.svg',
     apple: '/icon.svg',
@@ -32,14 +27,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/onboarding">
+      <html lang="sr-Latn" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={inter.variable + " font-sans antialiased"}
         >
           <ThemeProvider>
-            <MaxWidthWrapper>{children}</MaxWidthWrapper>
-            <Toaster />
+            {children}
+            <Toaster richColors position="top-center" closeButton />
           </ThemeProvider>
         </body>
       </html>

@@ -1,354 +1,78 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { 
-  Calendar, 
-  CheckCircle2, 
-  Clock, 
-  Users, 
-  Shield, 
-  BarChart3,
-  ArrowRight,
-  Mail,
-  Github,
-  Twitter,
-  LogIn
-} from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import { CalendarDays, Check, CheckCheck, ChevronRight, Clock3, Plus, Smartphone, Users } from "lucide-react";
+import { Brand } from "@/components/Brand";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { RequestStatus } from "@/components/RequestStatus";
 
-export default async function Home() {
-  return (
-    <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-16 flex items-center justify-between sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <Link href="/" className="flex items-center shrink-0">
-          <span className="text-2xl font-bold">HR</span>
-        </Link>
-        <nav className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide flex-1 justify-center mx-4">
-          <div className="flex gap-4 sm:gap-6 min-w-max">
-            <Link
-              href="/features"
-              className="text-sm font-medium hover:underline underline-offset-4 whitespace-nowrap"
-            >
-              Features
-            </Link>
-            <Link
-              href="/tutorial"
-              className="text-sm font-medium hover:underline underline-offset-4 whitespace-nowrap"
-            >
-              How it works
-            </Link>
-            <Link
-              href="/pricing"
-              className="text-sm font-medium hover:underline underline-offset-4 whitespace-nowrap"
-            >
-              Pricing
-            </Link>
+function ProductPreview() {
+  return <div className="relative mx-auto w-full max-w-lg">
+    <div className="rounded-[2rem] bg-secondary p-3 sm:p-6">
+      <div className="overflow-hidden rounded-2xl border bg-card">
+        <div className="flex items-center justify-between gap-3 border-b px-5 py-4"><span className="flex items-center gap-2 text-sm font-semibold"><CalendarDays className="size-4 text-primary" />Moj pregled</span><span className="rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">Primer prikaza</span></div>
+        <div className="space-y-5 p-5 sm:p-6">
+          <div><p className="text-sm text-muted-foreground">Dobro jutro, Ana</p><h2 className="mt-1 text-xl font-semibold">Vreme za vaše planove.</h2></div>
+          <div className="flex items-center justify-between rounded-xl bg-primary px-5 py-4 text-primary-foreground"><div><p className="text-sm opacity-90">Raspoloživi dani</p><p className="mt-1 text-4xl font-semibold tracking-tight">18 <span className="text-sm font-normal">dana</span></p></div><CalendarDays className="size-9 opacity-75" strokeWidth={1.5} /></div>
+          <div>
+            <div className="mb-3 flex items-center justify-between"><span className="text-sm font-semibold">Jun 2026.</span><span className="text-xs text-muted-foreground">Vaš sledeći odmor</span></div>
+            <div aria-label="Primer kalendara: odmor od 15. do 19. juna" className="grid grid-cols-7 gap-y-1 text-center text-xs">
+              {["P", "U", "S", "Č", "P", "S", "N"].map((day, i) => <span key={i} className="py-2 text-muted-foreground">{day}</span>)}
+              {Array.from({ length: 30 }, (_, i) => i + 1).map(day => <span key={day} className={"flex aspect-square items-center justify-center " + (day >= 15 && day <= 19 ? "bg-secondary font-semibold text-primary " + (day === 15 ? "rounded-l-lg" : day === 19 ? "rounded-r-lg" : "") : "text-muted-foreground")}>{day}</span>)}
+            </div>
           </div>
-        </nav>
-        <div className="flex gap-2 sm:gap-4 shrink-0 items-center">
-          <ThemeToggle />
-          <SignedOut>
-            <SignInButton mode="modal">
-              <Button 
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold group"
-                size="default"
-              >
-                <LogIn className="w-4 h-4 mr-2 group-hover:translate-x-0.5 transition-transform" />
-                Sign In
-              </Button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4"><div><p className="text-sm font-medium">Godišnji odmor</p><p className="mt-1 text-xs text-muted-foreground">15–19. jun · 5 radnih dana</p></div><RequestStatus status="APPROVED" /></div>
         </div>
-      </header>
-      <main>
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:grid-cols-2">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl  font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                    Effortless Time Off Management
-                  </h1>
-                  <p className="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
-                    Streamline your company&apos;s time off requests, approvals,
-                    and tracking all in one place.
-                  </p>
-                </div>
-                <div className="flex flex-col  md:justify-center  gap-2 min-[400px]:flex-row">
-                  <Button asChild>
-                    <Link href="/sign-up">Get Started</Link>
-                  </Button>
-                  <Button variant={"outline"} asChild>
-                    <Link href="/features">Learn More</Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center justify-center">
-                <div className="relative w-full  overflow-hidden rounded-lg shadow-lg">
-                  <Image
-                    src="/dashboard-screenshot.svg"
-                    alt="Dashboard screenshot"
-                    width={600}
-                    height={400}
-                    priority
-                    className="w-full h-auto object-cover"
-                  />
-                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/20 to-transparent h-8">
-                    <div className="flex items-center gap-2 px-4 py-2">
-                      <div className="bg-red-500 w-2 h-2 rounded-full" />
-                      <div className="bg-yellow-500 w-2 h-2 rounded-full" />
-                      <div className="bg-green-500 w-2 h-2 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50 dark:bg-gray-900">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                  Key Features
-                </h2>
-                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  Everything you need to manage your time off requests,
-                  approvals, and tracking all in one place.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-3 lg:gap-12">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col justify-center space-y-4">
-                    <Calendar className="w-10 h-10 text-primary" />
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold">
-                        Easy Request Submission
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Employees can submit time off requests directly through
-                        the platform with just a few clicks.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col justify-center space-y-4">
-                    <CheckCircle2 className="w-10 h-10 text-primary" />
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold">
-                        Quick Approvals
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Managers can review and approve requests instantly with
-                        real-time notifications.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col justify-center space-y-4">
-                    <BarChart3 className="w-10 h-10 text-primary" />
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold">
-                        Analytics & Insights
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Track time off trends, balance remaining, and generate
-                        comprehensive reports.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-        <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-3 lg:gap-12">
-              <div className="flex flex-col items-center text-center space-y-2">
-                <Users className="w-12 h-12 text-primary mb-4" />
-                <div className="text-4xl font-bold">100+</div>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Companies Trust Us
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center space-y-2">
-                <Clock className="w-12 h-12 text-primary mb-4" />
-                <div className="text-4xl font-bold">50K+</div>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Requests Processed
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center space-y-2">
-                <Shield className="w-12 h-12 text-primary mb-4" />
-                <div className="text-4xl font-bold">99.9%</div>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Uptime Guarantee
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50 dark:bg-gray-900">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                  Ready to Get Started?
-                </h2>
-                <p className="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
-                  Join thousands of companies managing their time off efficiently.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button asChild size="lg">
-                  <Link href="/sign-up">
-                    Get Started Free
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link href="/features">Learn More</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-      <footer className="border-t py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-4 lg:gap-12">
-            <div className="space-y-4">
-              <Link href="/" className="flex items-center">
-                <span className="text-2xl font-bold">HR</span>
-              </Link>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Effortless time off management for modern companies.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Product</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link
-                    href="/features"
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                  >
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/pricing"
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                  >
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/tutorial"
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                  >
-                    How it works
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Company</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link
-                    href="/about"
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                  >
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/contact"
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                  >
-                    Contact
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/blog"
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                  >
-                    Blog
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Legal</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link
-                    href="/privacy"
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                  >
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/terms"
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                  >
-                    Terms of Service
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-12 pt-8 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              © 2024 HR App. All rights reserved.
-            </p>
-            <div className="flex gap-4">
-              <Link
-                href="https://twitter.com"
-                className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                aria-label="Twitter"
-              >
-                <Twitter className="w-5 h-5" />
-              </Link>
-              <Link
-                href="https://github.com"
-                className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                aria-label="GitHub"
-              >
-                <Github className="w-5 h-5" />
-              </Link>
-              <Link
-                href="mailto:support@hr-app.com"
-                className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-                aria-label="Email"
-              >
-                <Mail className="w-5 h-5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
-  );
+    <p className="mt-3 text-center text-xs text-muted-foreground">Ilustrativni podaci. Vaši planovi imaju svoj prostor.</p>
+  </div>;
+}
+
+const questions = [
+  ["Šta mogu da uradim kao zaposleni?", "Možete da proverite raspoložive dane, pošaljete zahtev za godišnji odmor ili drugo odsustvo i pratite status i napomenu administratora."],
+  ["Kako da uključim svoju firmu?", "Kreirajte nalog i izaberite kreiranje firme. Podesite radnu nedelju i praznike, zatim generišite pozivne kodove za zaposlene."],
+  ["Već imam pozivni kod. Šta dalje?", "Izaberite „Pridruži se timu“, napravite nalog i unesite šestocifreni kod koji ste dobili od administratora."],
+  ["Mogu li da koristim TimeOffer na telefonu?", "Da. Zahteve, slobodne dane i odluke možete da pregledate u pregledaču na telefonu. Preuzimanje posebne aplikacije nije potrebno."],
+];
+
+export default function Home() {
+  return <div className="min-h-dvh">
+    <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-card focus:p-4">Pređi na sadržaj</a>
+    <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur-sm">
+      <div className="site-container flex h-20 items-center justify-between gap-3">
+        <Brand />
+        <nav aria-label="Glavna navigacija" className="hidden items-center gap-7 text-sm text-muted-foreground md:flex"><Link href="#mogucnosti" className="hover:text-primary">Mogućnosti</Link><Link href="#kako-radi" className="hover:text-primary">Kako funkcioniše</Link><Link href="#pitanja" className="hover:text-primary">Pitanja</Link></nav>
+        <div className="flex items-center gap-1 sm:gap-3"><div className="hidden sm:block"><ThemeToggle /></div><Button asChild variant="outline"><Link href="/sign-in">Prijavi se</Link></Button></div>
+      </div>
+    </header>
+    <main id="main-content">
+      <section className="site-container grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:py-20">
+        <div>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-2 text-xs font-medium text-muted-foreground"><span className="size-1.5 rounded-full bg-primary" />Manje administracije. Više vremena.</div>
+          <h1 className="max-w-xl text-[2.65rem] leading-[1.08] font-semibold tracking-[-0.045em] sm:text-6xl lg:text-[4.2rem]">Odmori i odsustva, jasno organizovani.</h1>
+          <p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">Pošaljite zahtev, pratite odobrenje i proverite preostale slobodne dane. Sve što vašem timu treba za jednostavnije planiranje odsustava.</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row"><Button asChild size="lg"><Link href="/sign-up?mode=admin">Kreiraj firmu<ChevronRight className="size-4" /></Link></Button><Button asChild size="lg" variant="outline"><Link href="/sign-up?mode=employee">Pridruži se timu</Link></Button></div>
+          <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Imate pozivni kod? Pridružite se svojoj firmi u nekoliko koraka.</p>
+          <div className="mt-9 flex flex-wrap gap-x-5 gap-y-3 border-t pt-6 text-xs font-medium sm:text-sm">{["Jasno stanje dana", "Pregledni zahtevi", "Dostupno na telefonu"].map(text => <span key={text} className="flex items-center gap-2"><Check className="size-4 text-primary" />{text}</span>)}</div>
+        </div>
+        <ProductPreview />
+      </section>
+      <section id="mogucnosti" className="border-y bg-card">
+        <div className="site-container py-14 sm:py-20">
+          <div className="mb-10 max-w-2xl"><h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Dobar pregled za ceo tim.</h2><p className="mt-4 leading-relaxed text-muted-foreground">Od prvog zahteva do poslednjeg slobodnog dana — svako zna šta je sledeće.</p></div>
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-16">
+            <div className="rounded-2xl bg-secondary p-6 sm:p-8"><CalendarDays className="mb-5 size-7 text-primary" /><h3 className="text-xl font-semibold">Vaše odsustvo, bez nedoumica.</h3><p className="mt-3 leading-relaxed text-muted-foreground">Izaberite datume i vrstu odsustva. Pre slanja pogledajte koliko radnih dana zahtev obuhvata.</p><ul className="mt-6 space-y-3 text-sm">{["Raspoloživi dani uvek na dohvat ruke", "Status zahteva i napomena administratora", "Prethodni i predstojeći odmori na jednom mestu"].map(text => <li key={text} className="flex gap-3"><Check className="mt-0.5 size-4 shrink-0 text-primary" />{text}</li>)}</ul><Link href="/sign-up?mode=employee" className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary">Pridruži se svom timu<ChevronRight className="size-4" /></Link></div>
+            <div className="py-2 sm:py-5"><Users className="mb-5 size-7 text-primary" /><h3 className="text-xl font-semibold">Manje posla oko organizacije.</h3><p className="mt-3 max-w-lg leading-relaxed text-muted-foreground">Pregledajte zahteve zaposlenih, zabeležite odluku i uredite pravila odsustva za svoju firmu.</p><div className="mt-7 space-y-5">{[{ icon: CheckCheck, title: "Odluke na jednom mestu", text: "Odobrite ili odbijte zahtev uz napomenu zaposlenom." }, { icon: CalendarDays, title: "Pravila prilagođena firmi", text: "Podesite radne dane i praznike koji se izuzimaju iz obračuna." }, { icon: Users, title: "Jednostavno uključivanje tima", text: "Pozovite zaposlene kodom i podesite raspoložive dane." }].map(item => <div key={item.title} className="flex gap-4"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted"><item.icon className="size-5 text-primary" /></span><div><h4 className="text-sm font-semibold">{item.title}</h4><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.text}</p></div></div>)}</div></div>
+          </div>
+        </div>
+      </section>
+      <section id="kako-radi" className="site-container py-14 sm:py-20">
+        <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Od plana do odobrenja.</h2>
+        <div className="mt-10 grid gap-8 md:grid-cols-3">{[{ icon: CalendarDays, title: "Izaberite datume", text: "Odredite period i vrstu odsustva. Broj radnih dana računa se prema pravilima firme." }, { icon: Clock3, title: "Pošaljite zahtev", text: "Administrator dobija zahtev na pregled. Po potrebi dodajte kratku napomenu." }, { icon: CheckCheck, title: "Pratite odluku", text: "Status i obrazloženje dostupni su u vašim zahtevima. Odobreni dani ažuriraju vaše stanje." }].map((item, index) => <div key={item.title} className="border-t pt-5"><div className="mb-5 flex items-center justify-between"><span className="text-sm font-medium text-primary">Korak {index + 1}</span><item.icon className="size-5 text-muted-foreground" /></div><h3 className="text-lg font-semibold">{item.title}</h3><p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p></div>)}</div>
+      </section>
+      <section className="site-container"><div className="flex flex-col justify-between gap-6 rounded-2xl bg-primary p-7 text-primary-foreground sm:flex-row sm:items-center sm:p-10"><div className="max-w-xl"><Smartphone className="mb-4 size-7" /><h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Vaši planovi idu sa vama.</h2><p className="mt-3 text-sm leading-relaxed opacity-90 sm:text-base">Proverite dane uz jutarnju kafu. Pošaljite zahtev u pokretu. TimeOffer je prilagođen telefonu, tabletu i računaru.</p></div><Button asChild size="lg" className="shrink-0 bg-white text-[#08616b] hover:bg-white/90"><Link href="/sign-in">Otvori svoj nalog</Link></Button></div></section>
+      <section id="pitanja" className="site-container grid gap-8 py-14 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20"><div><h2 className="text-3xl font-semibold tracking-tight">Pre nego što počnete.</h2><p className="mt-4 text-muted-foreground">Odgovori na najčešća pitanja.</p></div><div className="divide-y border-y">{questions.map(([question, answer]) => <details key={question} className="group py-1"><summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 text-sm font-medium sm:text-base [&::-webkit-details-marker]:hidden">{question}<Plus className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-45" /></summary><p className="pb-5 pr-6 text-sm leading-relaxed text-muted-foreground">{answer}</p></details>)}</div></section>
+    </main>
+    <footer className="border-t bg-card"><div className="site-container flex flex-col gap-5 py-8 sm:flex-row sm:items-center sm:justify-between"><Brand /><p className="text-xs text-muted-foreground">© {new Date().getFullYear()} TimeOffer. Vreme za bolju organizaciju.</p><div className="flex items-center gap-5 text-sm"><Link href="/sign-in" className="hover:text-primary">Prijava</Link><Link href="/sign-up" className="hover:text-primary">Registracija</Link><div className="sm:hidden"><ThemeToggle /></div></div></div></footer>
+  </div>;
 }

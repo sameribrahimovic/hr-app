@@ -1,105 +1,33 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Plus, CalendarDays, Clock3, ArrowUpRight } from "lucide-react";
 import prisma from "@/lib/prisma";
-
-const page = async () => {
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/PageHeader";
+import { EmptyState } from "@/components/EmptyState";
+import { RequestList } from "@/components/RequestList";
+import { formatDate } from "@/lib/utils";
+import { daysLabel } from "@/lib/labels";
+import { todayKey } from "@/lib/time-off";
+export default async function EmployeePage() {
   const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/");
-  }
-
-  const data = await prisma.timeOffRequest.findMany({
-    where: {
-      employee: {
-        clerkId: userId,
-      },
-    },
-    include: {
-      employee: true,
-    },
-  });
-
-  const availableDays = await prisma.user.findUnique({
-    where: {
-      clerkId: userId,
-    },
-    select: {
-      availableDays: true,
-    },
-  });
-
-  const totalRequests = data.length;
-  const approvedRequests = data.filter(
-    (request) => request.status === "APPROVED"
-  ).length;
-  const pendingRequests = data.filter(
-    (request) => request.status === "PENDING"
-  ).length;
-
-  return (
-    <div className="space-y-8 mt-12">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold">Employee Dashboard.</h1>
-        <p className="text-gray-500">Manage your time off requests.</p>
-      </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Time Off Requests</CardTitle>
-            <CardDescription>Manage your time off</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col space-y-2">
-              <Button asChild>
-                <Link href="/employee/new-request">New request</Link>
-              </Button>
-              <Button value={"outline"} asChild>
-                <Link href="/employee/my-requests">View My Requests</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick overview</CardTitle>
-            <CardDescription>Your time off at a glance.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-lg bg-gray-100 p-5 text-center">
-                <div className="text-2xl font-bold">{totalRequests}</div>
-                <div className="text-sm text-gray-500">Total Requests</div>
-              </div>
-              <div className="rounded-lg bg-gray-100 p-5 text-center">
-                <div className="text-2xl font-bold">{approvedRequests}</div>
-                <div className="text-sm text-gray-500">Approved Requests</div>
-              </div>
-              <div className="rounded-lg bg-gray-100 p-5 text-center">
-                <div className="text-2xl font-bold">{pendingRequests}</div>
-                <div className="text-sm text-gray-500">Pending Requests</div>
-              </div>
-              <div className="rounded-lg bg-gray-100 p-5 text-center">
-                <div className="text-2xl font-bold">
-                  {availableDays ? availableDays.availableDays : "N/A"}
-                </div>
-                <div className="text-sm text-gray-500">Days Available</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+  if (!userId) redirect("/sign-in");
+  const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+  if (!user) redirect("/onboarding");
+  const [recent, pending, next] = await Promise.all([
+    prisma.timeOffRequest.findMany({ where: { employeeId: user.id }, include: { manager: true }, orderBy: { createdAt: "desc" }, take: 4 }),
+    prisma.timeOffRequest.aggregate({ where: { employeeId: user.id, status: "PENDING" }, _count: true, _sum: { workingDaysCount: true } }),
+    prisma.timeOffRequest.findFirst({ where: { employeeId: user.id, status: "APPROVED", endDate: { gte: new Date(todayKey()) } }, orderBy: { startDate: "asc" } }),
+  ]);
+  return <div className="page-stack">
+    <PageHeader title={"Zdravo, " + user.firstName + "."} description="Vaši slobodni dani, planovi i zahtevi na jednom mestu." />
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.25fr_1fr_1fr]">
+      <section className="flex flex-col justify-between rounded-2xl bg-primary p-6 text-primary-foreground sm:p-7"><div className="flex items-start justify-between"><div><h2 className="text-sm font-medium opacity-90">Raspoloživi dani</h2><p className="mt-3 text-5xl font-semibold tracking-tight">{user.availableDays}<span className="ml-2 text-base font-normal">{daysLabel(user.availableDays)}</span></p></div><CalendarDays className="size-7 opacity-80" /></div><p className="mt-4 text-xs leading-relaxed opacity-85">Zahtevi na čekanju još nisu oduzeti od ovog stanja.</p><Button asChild className="mt-6 bg-white text-[#08616b] hover:bg-white/90"><Link href="/employee/new-request"><Plus className="size-4" />Zatraži odsustvo</Link></Button></section>
+      <section className="surface p-6"><Clock3 className="mb-5 size-6 text-muted-foreground" /><h2 className="text-sm font-medium text-muted-foreground">Čeka odluku</h2><p className="mt-2 text-3xl font-semibold">{pending._count}<span className="ml-2 text-sm font-normal text-muted-foreground">zahteva</span></p><p className="mt-3 text-sm text-muted-foreground">Ukupno {pending._sum.workingDaysCount ?? 0} dana u zahtevima na čekanju.</p><Link href="/employee/my-requests?status=PENDING" className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary">Pogledaj zahteve<ArrowUpRight className="size-4" /></Link></section>
+      <section className="surface p-6 md:col-span-2 xl:col-span-1"><CalendarDays className="mb-5 size-6 text-muted-foreground" /><h2 className="text-sm font-medium text-muted-foreground">Sledeće ili tekuće odsustvo</h2>{next ? <><p className="mt-3 text-lg font-semibold">{formatDate(next.startDate)}</p><p className="mt-1 text-sm text-muted-foreground">do {formatDate(next.endDate)}</p><p className="mt-5 text-sm font-medium text-primary">{next.workingDaysCount} {daysLabel(next.workingDaysCount)} za vaše planove</p></> : <><p className="mt-3 text-lg font-semibold">Planovi tek dolaze.</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground">Ovde će biti prikazano vaše sledeće odobreno odsustvo.</p></>}</section>
     </div>
-  );
-};
-
-export default page;
+    <section className="surface"><div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-4"><h2 className="section-title">Poslednji zahtevi</h2><Link href="/employee/my-requests" className="inline-flex min-h-11 items-center text-sm font-medium text-primary">Svi zahtevi<Chevron /></Link></div>{recent.length ? <RequestList requests={recent} /> : <EmptyState title="Vaš prvi odmor počinje ovde." description="Izaberite datume i pošaljite zahtev. Status i odgovor administratora biće dostupni u ovom pregledu." action={<Button asChild><Link href="/employee/new-request"><Plus className="size-4" />Novi zahtev</Link></Button>} />}</section>
+  </div>;
+}
+function Chevron() { return <ArrowUpRight className="ml-1 size-4" aria-hidden="true" />; }
