@@ -1,42 +1,43 @@
-Invitation codes to test :
-215396	
-191350
-829385
+# TimeOffer
 
-## HR-APP application build using Next.JS 15
-![home-screen](https://github.com/user-attachments/assets/74db6f92-a3e4-478f-9a77-a63af8269aa4)
+Mobile-first application for employee leave requests, approvals, and company leave policies. Built with Next.js 16, React 19, Clerk, Prisma/PostgreSQL, and Tailwind CSS 4.
 
+## Local development
 
-## Technologies used
-- **Nextjs**
-- **Auth with Clerk**
-- **Typescript**
-- **Prisma ORM**
-- **Zod**
-- **React Hook Form**
-- **Server actions**
-- **Taiwind / Shadcn UI**
-- **Postgresql for db**
+Use Node.js 22.18+ (or Node.js 24 LTS) and the project environment configuration.
 
-### 🌟 Features
+```sh
+npm install
+npm run dev
+```
 
-- **HR app:** employee vacation trackings. Employee can apply for vacation, Admin can approve or deny request with note
-- **Admin/employee view** Different user can login, and diferent screen shows up.
-![employee-view](https://github.com/user-attachments/assets/729fcf28-cd86-4f9d-9989-278d2be0db1c)
-![admin-layout](https://github.com/user-attachments/assets/42ed75d9-73d5-4479-9a5d-c635b755f5a5)
-- **Admin can change company settings**
-![company-settings](https://github.com/user-attachments/assets/ce2dec26-ed90-4358-a383-67f555f86c88)
-- **Admin can admin can view, aprove or deny employee request**
-  ![view-all-requests](https://github.com/user-attachments/assets/366aeed9-4848-4e03-996e-8d360231dba2)
-![new-request](https://github.com/user-attachments/assets/a1f0e389-d1cc-4079-8157-cf11edb0982c)
+Required environment variables: `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, and `CLERK_SECRET_KEY`. The existing Clerk webhook uses `SIGNING_SECRET`. Do not commit credentials.
 
-- **Theme Customization:** Light/dark mode - to be done!
+Clerk session claims must expose the user's public metadata under `metadata` (onboardingCompleted, role, companyId). Local authentication pages are available at `/sign-in` and `/sign-up`.
 
-## Contributing
-We welcome contributions to HR-APP! If you have any ideas, suggestions, or bug reports, feel free to open an issue or submit a pull request.
+## Checks
 
-## Disclaimer
-This project is still in the stage of development and updates are being rolled out regularly so keep checking back for new things!
+```sh
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
 
+## Product behavior
 
+- Employees submit leave, view balances, and filter requests by status, type, and dates.
+- Administrators review pending requests, manage balances, and invite employees with single-use codes.
+- Workweek and company holidays determine billable leave days. Recurring fixed-date holidays apply each year.
+- Leave dates are calendar dates stored at UTC midnight. The current business date uses Europe/Belgrade.
+- Every approved leave type deducts days from the existing shared balance. Pending requests do not reserve days; sufficient balance is checked when approving.
+- Company policy changes apply to new requests. Existing requests retain their recorded day count.
+- Requests must contain at least one working day, start today or later, and cover at most 366 calendar days.
+- Approval and balance deduction are atomic; processing the same request twice is prevented.
+- No schema migration is required for this redesign.
 
+## Interface
+
+Serbian Latin interface, Inter typography, light/dark themes, and a persistent mobile bottom navigation. Public-page content is capped at 1280px with 20–48px gutters. The landing page preview contains explicitly labeled illustrative data.
+
+Team calendars, notifications, request withdrawal, and installable/offline PWA functionality are separate future features.

@@ -1,197 +1,33 @@
 "use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Code } from "@prisma/client";
+import { Copy, Check, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { CheckIcon, CopyIcon, PlusIcon, RefreshCwIcon } from "lucide-react";
-import { Code } from "@prisma/client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { PageHeader } from "@/components/PageHeader";
+import { EmptyState } from "@/components/EmptyState";
 import { generateInvitationCode } from "@/lib/actions/admin-actions";
-
-interface InvitationCodesProps {
-  initialCodes: Code[];
+import { formatDate } from "@/lib/utils";
+import { toast } from "sonner";
+export default function InvitationCodes({ initialCodes }: { initialCodes: Code[] }) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [copied, setCopied] = useState("");
+  const [error, setError] = useState("");
+  async function generate() {
+    setPending(true); setError("");
+    try { await generateInvitationCode(); toast.success("Pozivni kod je kreiran."); router.refresh(); }
+    catch { setError("Kod nije kreiran. Pokušajte ponovo."); } finally { setPending(false); }
+  }
+  async function copy(code: string) {
+    try { await navigator.clipboard.writeText(code); setCopied(code); toast.success("Kod je kopiran."); }
+    catch { toast.error("Kopiranje nije dostupno. Označite i kopirajte kod ručno."); }
+  }
+  const active = initialCodes.filter(code => !code.used);
+  const used = initialCodes.filter(code => code.used);
+  return <div className="page-stack"><PageHeader title="Pozovite svoj tim." description="Kreirajte jednokratni kod i prosledite ga zaposlenom." back={{ href: "/admin/employees", label: "Nazad na tim" }} action={<Button onClick={generate} disabled={pending}>{pending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}{pending ? "Kreiranje..." : "Kreiraj pozivni kod"}</Button>} />
+    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    <div className="grid items-start gap-6 lg:grid-cols-[1.4fr_1fr]"><section className="surface"><div className="flex items-center justify-between border-b p-5"><h2 className="section-title">Aktivni kodovi</h2><span className="text-sm text-muted-foreground">{active.length}</span></div>{active.length ? <ul className="divide-y">{active.map(code => <li key={code.id} className="flex flex-wrap items-center justify-between gap-3 p-5"><div><p className="select-all font-mono text-xl font-semibold tracking-[0.2em]">{code.code}</p><p className="mt-1 text-xs text-muted-foreground">Kreiran {formatDate(code.createdAt)}</p></div><Button variant="outline" onClick={() => copy(code.code)} aria-label={"Kopiraj kod " + code.code}>{copied === code.code ? <Check className="size-4" /> : <Copy className="size-4" />}{copied === code.code ? "Kopirano" : "Kopiraj"}</Button></li>)}</ul> : <EmptyState title="Spremni za novog člana?" description="Kreirajte prvi kod i pozovite zaposlenog da se pridruži firmi." />}</section><aside className="rounded-2xl bg-secondary p-6"><h2 className="section-title">Tri koraka do vašeg tima</h2><ol className="mt-5 space-y-5">{["Kreirajte kod za jednog zaposlenog.", "Prosledite mu kod i link do TimeOffer aplikacije.", "Zaposleni pravi nalog i unosi kod pri pridruživanju."].map((text, i) => <li key={text} className="flex gap-3 text-sm leading-relaxed"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-card text-xs font-semibold text-primary">{i + 1}</span>{text}</li>)}</ol><p className="mt-6 border-t border-primary/20 pt-4 text-xs leading-relaxed text-secondary-foreground">Svaki kod može da iskoristi samo jedna osoba.</p></aside></div>
+    {used.length > 0 && <details className="surface p-5"><summary className="cursor-pointer text-sm font-medium">Iskorišćeni kodovi ({used.length})</summary><ul className="mt-4 flex flex-wrap gap-2">{used.map(code => <li key={code.id} className="rounded-lg bg-muted px-3 py-2 font-mono text-sm text-muted-foreground">{code.code}</li>)}</ul></details>}
+  </div>;
 }
-
-const InvitationCodesPage = ({ initialCodes }: InvitationCodesProps) => {
-  const [codes, setCodes] = useState<Code[]>(initialCodes);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    setCodes(initialCodes);
-  }, [initialCodes]);
-
-  const handleGenerateCode = async () => {
-    // call server action to generate code
-
-    setIsGenerating(true);
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const newCode = await generateInvitationCode();
-      setCodes((prev) => [newCode, ...prev]);
-      toast.success("New code generated successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to generate code");
-      setError("Failed to generate code");
-    } finally {
-      setIsGenerating(false);
-      setIsLoading(false);
-    }
-  };
-
-  const copyToClipboard = (code: string) => {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopied({ ...copied, [code]: true });
-      toast.success("Code copied to clipboard");
-    });
-
-    setTimeout(() => {
-      setCopied({ ...copied, [code]: false });
-    }, 2000);
-  };
-
-  return (
-    <div className="space-y-8 mt-12">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Invitation Codes</h1>
-          <p className="text-gray-500">
-            Generate and manage invitation codes for your new employees.
-          </p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href="/admin">Back to dashboard</Link>
-        </Button>
-      </div>
-      {error && (
-        <Alert variant={"destructive"}>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      <div className="flex justify-end">
-        <Button onClick={handleGenerateCode} disabled={isGenerating}>
-          {isGenerating ? (
-            <>
-              <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Generate New code
-            </>
-          )}
-        </Button>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Invitation Codes</CardTitle>
-          <CardDescription>
-            Codes that can be used to join your company
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <RefreshCwIcon className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-          ) : codes?.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {codes?.map((code) => (
-                  <TableRow key={code.id}>
-                    <TableCell className="font-mono text-lg">
-                      {code.code}
-                    </TableCell>
-                    <TableCell>
-                      {code.used ? (
-                        <Badge variant={"secondary"}>Used</Badge>
-                      ) : (
-                        <Badge
-                          variant={"default"}
-                          className="bg-green-500 text-white"
-                        >
-                          Active
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant={"ghost"}
-                        size={"sm"}
-                        onClick={() => copyToClipboard(code.code)}
-                        disabled={code.used}
-                      >
-                        {copied[code.code] ? (
-                          <CheckIcon className="h-4 w-4" />
-                        ) : (
-                          <CopyIcon className="h-4 w-4" />
-                        )}
-                        <span className="sr-only">Copy code</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="flex justify-center py-8">
-              <p className="text-gray-500">No active codes</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>How to use invitation codes</CardTitle>
-          <CardDescription>
-            Share these codes with your employees to join your company
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ol className="list-decimal pl-5 space-y-2">
-            <li>Generate a new invitation code using the button above</li>
-            <li>Share the 6-digit code with your employee</li>
-            <li>
-              The employee will sign up and enter this code during onboarding
-            </li>
-            <li>
-              Once used, the code will be marked as &quot;Used&quot; and cannot
-              be used again
-            </li>
-          </ol>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-export default InvitationCodesPage;

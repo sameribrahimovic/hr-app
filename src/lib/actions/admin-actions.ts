@@ -2,471 +2,96 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "../prisma";
 import { revalidatePath } from "next/cache";
-
-export async function updateCompanyProfile({
-  name,
-  website,
-  logo,
-}: {
-  name: string;
-  website?: string;
-  logo?: string;
-}) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-      select: {
-        companyId: true,
-        role: true,
-      },
-    });
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    if (user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-
-    await prisma.company.update({
-      where: {
-        id: user.companyId,
-      },
-      data: {
-        name,
-        website,
-        logo,
-      },
-    });
-
-    revalidatePath("/admin/company-settings/profile");
-    revalidatePath("/admin/company-settings");
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to update company profile");
-  }
+import { z } from "zod";
+import { weekdays } from "../time-off";
+async function requireAdmin() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Prijavite se da biste nastavili.");
+  const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+  if (!user || user.role !== "ADMIN") throw new Error("Ova akcija je dostupna administratorima.");
+  return user;
 }
-
+function refreshRequests() {
+  revalidatePath("/admin"); revalidatePath("/admin/time-off-requests");
+  revalidatePath("/employee"); revalidatePath("/employee/my-requests");
+}
+export async function updateCompanyProfile(input: { name: string; website?: string; logo?: string }) {
+  const user = await requireAdmin();
+  const optionalUrl = z.string().url().refine(value => /^https?:/.test(value)).or(z.literal("")).optional();
+  const data = z.object({ name: z.string().trim().min(1).max(100), website: optionalUrl, logo: optionalUrl }).parse(input);
+  await prisma.company.update({ where: { id: user.companyId }, data });
+  revalidatePath("/admin", "layout");
+  return { success: true };
+}
 export async function updateCompanyWorkingDays(workingDays: string[]) {
-  try {
-    const { userId, sessionClaims } = await auth();
-
-    console.log(userId, sessionClaims);
-
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-      select: {
-        role: true,
-        companyId: true,
-      },
-    });
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    if (user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-
-    await prisma.company.update({
-      where: {
-        id: user.companyId,
-      },
-      data: {
-        workingDays: JSON.stringify(workingDays),
-      },
-    });
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to update company working days");
-  }
+  const user = await requireAdmin();
+  const days = z.array(z.string().refine(value => weekdays.some(day => day.id === value))).min(1).max(7).parse(workingDays);
+  await prisma.company.update({ where: { id: user.companyId }, data: { workingDays: JSON.stringify([...new Set(days)]) } });
+  revalidatePath("/admin/company-settings/working-days"); revalidatePath("/employee/new-request");
+  return { success: true };
 }
-
-export async function addCompanyHoliday({
-  name,
-  date,
-  isRecurring,
-}: {
-  name: string;
-  date: Date;
-  isRecurring: boolean;
-}) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorised. Please sign in.");
-  }
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-      select: {
-        companyId: true,
-        role: true,
-      },
-    });
-
-    if (!user) {
-      throw new Error("User not found in database");
-    }
-
-    if (user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-
-    const holiday = await prisma.companyHoliday.create({
-      data: {
-        name,
-        date,
-        isRecurring,
-        companyId: user.companyId,
-      },
-    });
-
-    revalidatePath("/admin/company-settings/holidays");
-
-    return holiday;
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to add company holiday");
-  }
+const holidaySchema = z.object({ name: z.string().trim().min(1).max(100), date: z.date(), isRecurring: z.boolean() });
+export async function addCompanyHoliday(input: { name: string; date: Date; isRecurring: boolean }) {
+  const user = await requireAdmin();
+  const data = holidaySchema.parse(input);
+  const holiday = await prisma.companyHoliday.create({ data: { ...data, companyId: user.companyId } });
+  revalidatePath("/admin/company-settings/holidays"); revalidatePath("/employee/new-request");
+  return holiday;
 }
-
-export async function updateCompanyHoliday({
-  id,
-  name,
-  date,
-  isRecurring,
-}: {
-  id: string;
-  name: string;
-  date: Date;
-  isRecurring: boolean;
-}) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorised. Please sign in.");
-  }
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-      select: {
-        companyId: true,
-        role: true,
-      },
-    });
-
-    if (!user) {
-      throw new Error("User not found in database");
-    }
-
-    if (user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-
-    const holiday = await prisma.companyHoliday.findUnique({
-      where: { id },
-      select: { companyId: true },
-    });
-
-    if (!holiday) {
-      throw new Error("Holiday not found in database");
-    }
-
-    if (holiday.companyId !== user.companyId) {
-      throw new Error("You can only update holidays for your own company");
-    }
-
-    const updatedHoliday = await prisma.companyHoliday.update({
-      where: { id },
-      data: {
-        name,
-        date,
-        isRecurring,
-      },
-    });
-
-    revalidatePath("/admin/company-settings/holidays");
-
-    return updatedHoliday;
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to add company holiday");
-  }
+export async function updateCompanyHoliday(input: { id: string; name: string; date: Date; isRecurring: boolean }) {
+  const user = await requireAdmin();
+  const data = holidaySchema.parse(input);
+  const result = await prisma.companyHoliday.updateMany({ where: { id: input.id, companyId: user.companyId }, data });
+  if (result.count !== 1) throw new Error("Praznik nije pronađen.");
+  revalidatePath("/admin/company-settings/holidays"); revalidatePath("/employee/new-request");
+  return prisma.companyHoliday.findUniqueOrThrow({ where: { id: input.id } });
 }
 export async function deleteCompanyHoliday(id: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-      select: {
-        companyId: true,
-        role: true,
-      },
-    });
-
-    if (!user) {
-      throw new Error("User not found in database");
-    }
-
-    if (user.role !== "ADMIN") {
-      throw new Error("Only admins can delete company holidays");
-    }
-
-    const existingHoliday = await prisma.companyHoliday.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        companyId: true,
-      },
-    });
-
-    if (!existingHoliday) {
-      throw new Error("Holiday not found in database");
-    }
-
-    if (existingHoliday.companyId !== user.companyId) {
-      throw new Error("You can only delete holidays for your own company");
-    }
-
-    await prisma.companyHoliday.delete({
-      where: {
-        id,
-      },
-    });
-
-    revalidatePath("/admin/company-settings/holidays");
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to delete company holiday");
-  }
+  const user = await requireAdmin();
+  const result = await prisma.companyHoliday.deleteMany({ where: { id, companyId: user.companyId } });
+  if (result.count !== 1) throw new Error("Praznik nije pronađen.");
+  revalidatePath("/admin/company-settings/holidays"); revalidatePath("/employee/new-request");
+  return { success: true };
 }
-
-//employee
-export async function updateEmployeeAllowance({
-  employeeId,
-  availableDays,
-}: {
-  employeeId: string;
-  availableDays: number;
-}) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return { error: "Unauthorised" };
-    }
-
-    const adminUser = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-    });
-
-    if (!adminUser || adminUser.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-    await prisma.user.update({
-      where: {
-        id: employeeId,
-      },
-      data: {
-        availableDays,
-      },
-    });
-
-    revalidatePath("/admin/employees/allowance");
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to update employee allowance");
-  }
+export async function updateEmployeeAllowance(input: { employeeId: string; availableDays: number }) {
+  const user = await requireAdmin();
+  const data = z.object({ employeeId: z.string().min(1), availableDays: z.number().int().min(0).max(366) }).parse(input);
+  const result = await prisma.user.updateMany({ where: { id: data.employeeId, companyId: user.companyId }, data: { availableDays: data.availableDays } });
+  if (result.count !== 1) throw new Error("Zaposleni nije pronađen u vašoj firmi.");
+  revalidatePath("/admin/employees"); revalidatePath("/admin/employees/allowance"); revalidatePath("/employee");
+  return { success: true };
 }
-
-//invitations codes generate
 export async function generateInvitationCode() {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorise");
-    }
-
-    const user = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-      select: {
-        role: true,
-        companyId: true,
-      },
-    });
-
-    if (!user || user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-
-    const generateRandomCode = () => {
-      return Math.floor(100000 + Math.random() * 900000).toString();
-    };
-
-    let code = generateRandomCode();
-
-    let existingCode = await prisma.code.findFirst({
-      where: {
-        code,
-      },
-    });
-
-    while (existingCode) {
-      code = generateRandomCode();
-      existingCode = await prisma.code.findFirst({
-        where: {
-          code,
-        },
-      });
-    }
-
-    const newCode = await prisma.code.create({
-      data: {
-        code,
-        companyId: user.companyId,
-        used: false,
-      },
-    });
-
-    revalidatePath("/admin/invitation-codes");
-
-    return newCode;
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to generate invitation code");
-  }
+  const user = await requireAdmin();
+  const { randomInt } = await import("node:crypto");
+  let code = String(randomInt(100000, 1000000));
+  while (await prisma.code.findFirst({ where: { code } })) code = String(randomInt(100000, 1000000));
+  const result = await prisma.code.create({ data: { code, companyId: user.companyId } });
+  revalidatePath("/admin/invitation-codes");
+  return result;
 }
-
-export async function updateTimeOffRequestStatus({
-  requestId,
-  status,
-  notes,
-}: {
-  requestId: string;
-  status: "APPROVED" | "REJECTED";
-  notes?: string;
-}) {
+export async function updateTimeOffRequestStatus(input: { requestId: string; status: "APPROVED" | "REJECTED"; notes?: string }) {
+  const user = await requireAdmin();
+  const parsed = z.object({ requestId: z.string().min(1), status: z.enum(["APPROVED", "REJECTED"]), notes: z.string().trim().max(2000).optional() }).safeParse(input);
+  if (!parsed.success) return { success: false as const, error: "Proverite odluku i dužinu napomene." };
+  const { requestId, status, notes } = parsed.data;
+  if (status === "REJECTED" && !notes) return { success: false as const, error: "Unesite razlog odbijanja." };
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      throw new Error("Unauthorised");
-    }
-
-    const user = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-      select: {
-        id: true,
-        companyId: true,
-        role: true,
-      },
+    await prisma.$transaction(async tx => {
+      const request = await tx.timeOffRequest.findFirst({ where: { id: requestId, employee: { companyId: user.companyId } } });
+      if (!request) throw new Error("NOT_FOUND");
+      const changed = await tx.timeOffRequest.updateMany({ where: { id: requestId, status: "PENDING" }, data: { status, notes: notes || null, managerId: user.id } });
+      if (changed.count !== 1) throw new Error("ALREADY_PROCESSED");
+      if (status === "APPROVED") {
+        if (request.workingDaysCount < 1) throw new Error("INVALID_DAYS");
+        const balance = await tx.user.updateMany({ where: { id: request.employeeId, companyId: user.companyId, availableDays: { gte: request.workingDaysCount } }, data: { availableDays: { decrement: request.workingDaysCount } } });
+        if (balance.count !== 1) throw new Error("INSUFFICIENT_DAYS");
+      }
     });
-
-    if (!user) {
-      throw new Error("User not found in database");
-    }
-
-    if (user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-
-    const request = await prisma.timeOffRequest.findUnique({
-      where: {
-        id: requestId,
-      },
-      include: {
-        employee: true,
-      },
-    });
-
-    if (!request) {
-      throw new Error("Time off request not found in database");
-    }
-
-    if (request.employee.companyId !== user.companyId) {
-      throw new Error(
-        "You can only update time off requests for your own company"
-      );
-    }
-
-    const updatedRequest = await prisma.timeOffRequest.update({
-      where: {
-        id: requestId,
-      },
-      data: {
-        status,
-        notes,
-        managerId: user.id,
-      },
-    });
-
-    if (status === "APPROVED") {
-      await prisma.user.update({
-        where: {
-          id: request.employeeId,
-        },
-        data: {
-          availableDays: {
-            decrement: updatedRequest.workingDaysCount,
-          },
-        },
-      });
-    }
-    revalidatePath("/admin/time-off-requests");
-
-    return updatedRequest;
   } catch (error) {
-    console.error(error);
-    throw new Error("Failed to update time off request status");
+    const errors: Record<string, string> = { NOT_FOUND: "Zahtev nije pronađen u vašoj firmi.", ALREADY_PROCESSED: "Ovaj zahtev je već obrađen. Osvežite stranicu.", INSUFFICIENT_DAYS: "Zaposleni više nema dovoljno raspoloživih dana.", INVALID_DAYS: "Zahtev nema ispravan broj radnih dana i ne može biti odobren." };
+    return { success: false as const, error: error instanceof Error && errors[error.message] ? errors[error.message] : "Odluka nije sačuvana. Pokušajte ponovo." };
   }
+  refreshRequests(); revalidatePath("/admin/time-off-requests/" + requestId);
+  return { success: true as const };
 }

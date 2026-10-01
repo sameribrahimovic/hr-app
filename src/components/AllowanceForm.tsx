@@ -1,93 +1,24 @@
 "use client";
-
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { updateEmployeeAllowance } from "@/lib/actions/admin-actions";
-
-interface AllowanceFormProps {
-  employeeId: string;
-  employeeName: string;
-  currentAllowance: number;
-}
-
-export default function AllowanceForm({
-  employeeId,
-  employeeName,
-  currentAllowance,
-}: AllowanceFormProps) {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [allowance, setAllowance] = useState<number>(currentAllowance);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+import { toast } from "sonner";
+export default function AllowanceForm({ employeeId, employeeName, currentAllowance }: { employeeId: string; employeeName: string; currentAllowance: number }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [allowance, setAllowance] = useState(String(currentAllowance));
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setPending(true); setError("");
     try {
-      // TODO: Implement allowance update
-
-      const result = await updateEmployeeAllowance({
-        employeeId,
-        availableDays: allowance,
-      });
-
-      if (result.success) {
-        toast.success("Allowance updated successfully");
-        setIsOpen(false);
-        setAllowance(currentAllowance);
-      }
-    } catch (error) {
-      console.error("Error updating allowance:", error);
-      toast.error("Failed to update allowance. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant={"outline"} size="sm">
-          Edit
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Update Holiday allowance</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="employee-name">Employee</Label>
-            <Input id="employee-name" value={employeeName} disabled />
-          </div>
-          <div className="space-y-4">
-            <Label htmlFor="allowance" className="mt-4">
-              Holiday allowance (days)
-            </Label>
-            <Input
-              id="allowance"
-              type="number"
-              min={0}
-              value={allowance}
-              onChange={(e) => setAllowance(parseInt(e.target.value))}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full mt-4" disabled={isSubmitting}>
-            {isSubmitting ? "Updating..." : "Update Allowance"}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+      await updateEmployeeAllowance({ employeeId, availableDays: Number(allowance) });
+      toast.success("Raspoloživi dani su ažurirani."); setOpen(false); router.refresh();
+    } catch { setError("Izmena nije sačuvana. Unesite ceo broj od 0 do 366 i pokušajte ponovo."); }
+    finally { setPending(false); }
+  }
+  return <Dialog open={open} onOpenChange={value => { if (!pending) { setOpen(value); setAllowance(String(currentAllowance)); setError(""); } }}><DialogTrigger asChild><Button variant="outline" size="sm" aria-label={"Uredi dane: " + employeeName}>Uredi dane</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Raspoloživi dani</DialogTitle><DialogDescription>{employeeName}</DialogDescription></DialogHeader><form onSubmit={submit} className="space-y-5"><div><label htmlFor={"allowance-" + employeeId} className="field-label">Novo raspoloživo stanje</label><Input id={"allowance-" + employeeId} type="number" inputMode="numeric" min={0} max={366} step={1} required value={allowance} disabled={pending} onChange={event => setAllowance(event.target.value)} /><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Unesite ukupno preostalo stanje. Ova vrednost zamenjuje trenutnih {currentAllowance} dana.</p></div>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}<DialogFooter><Button type="button" variant="outline" disabled={pending} onClick={() => setOpen(false)}>Odustani</Button><Button type="submit" disabled={pending}>{pending ? "Čuvanje..." : "Sačuvaj stanje"}</Button></DialogFooter></form></DialogContent></Dialog>;
 }

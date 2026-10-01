@@ -16,11 +16,12 @@ const HolidaysPage = async () => {
     },
     select: {
       companyId: true,
+      role: true,
     },
   });
 
-  if (!user) {
-    redirect("/sign-in");
+  if (!user || user.role !== "ADMIN") {
+    redirect("/");
   }
 
   const companyHolidays = await prisma.companyHoliday.findMany({
